@@ -1,0 +1,57 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
+
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+
+local NoclipEnabled = false
+local Connection
+
+-- Hàm thông báo
+local function Notify(msg)
+	StarterGui:SetCore("SendNotification", {
+		Title = "Noclip Status:",
+		Text = msg,
+		Duration = 3
+	})
+end
+
+-- Hàm bật/tắt noclip
+local function ToggleNoclip(state)
+	NoclipEnabled = state
+
+	if NoclipEnabled then
+		Connection = RunService.Stepped:Connect(function()
+			for _, part in pairs(Character:GetDescendants()) do
+				if part:IsA("BasePart") and part.CanCollide then
+					part.CanCollide = false
+				end
+			end
+		end)
+		Notify("Noclip Turned On ✅")
+	else
+		if Connection then
+			Connection:Disconnect()
+			Connection = nil
+		end
+		-- Bật lại va chạm khi tắt noclip
+		for _, part in pairs(Character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+		Notify("Noclip Turned Off ❌")
+	end
+end
+
+-- Theo dõi chat
+LocalPlayer.Chatted:Connect(function(msg)
+	msg = msg:lower()
+	if msg == "/noclip" then
+		ToggleNoclip(true)
+	elseif msg == "/unnoclip" then
+		ToggleNoclip(false)
+	end
+end)
